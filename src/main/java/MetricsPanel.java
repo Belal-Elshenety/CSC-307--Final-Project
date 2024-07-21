@@ -5,7 +5,10 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MetricsPanel extends JPanel {
     private JTable table;
@@ -38,29 +41,40 @@ public class MetricsPanel extends JPanel {
     private void calculateMetrics(File[] files) {
         JavaFileParser parser = new JavaFileParser();
         MetricCalculator calculator = new MetricCalculator();
-        
+        List<File> fileList = new ArrayList<>();
         for (File file : files) {
-            List<ClassOrInterfaceDeclaration> classes = parser.parseFile(file);
-            if (classes != null) {
-                for (ClassOrInterfaceDeclaration cls : classes) {
-                    try {
-                        int lines = calculator.calculateLines(file);
-                        int loc = calculator.calculateLOC(file);
-                        int eloc = calculator.calculateELOC(file);
-                        int iloc = calculator.calculateILOC(file);
-                        int abstraction = calculator.calculateAbstraction(cls);
-                        double instability = calculator.calculateInstability(classes); // Placeholder method
-                        double distance = calculator.calculateDistance(abstraction, instability); // Placeholder method
+            fileList.add(file);
+        }
 
-                        Object[] row = {cls.getName().asString(), lines, loc, eloc, iloc, abstraction, instability, distance};
-                        tableModel.addRow(row);
-                    } catch (IOException e) {
-                        e.printStackTrace();
+        try {
+            Map<String, Set<String>> dependencies = calculator.parseDependencies(fileList);
+
+            for (File file : files) {
+                List<ClassOrInterfaceDeclaration> classes = parser.parseFile(file);
+                if (classes != null) {
+                    for (ClassOrInterfaceDeclaration cls : classes) {
+                        try {
+                            String className = cls.getNameAsString();
+                            int lines = calculator.calculateLines(file);
+                            int loc = calculator.calculateLOC(file);
+                            int eloc = calculator.calculateELOC(file);
+                            int iloc = calculator.calculateILOC(file);
+                            int abstraction = calculator.calculateAbstraction(cls);
+                            double instability = calculator.calculateInstability(dependencies, className);
+                            double distance = calculator.calculateDistance(abstraction, instability);
+
+                            Object[] row = {className, lines, loc, eloc, iloc, abstraction, instability, distance};
+                            tableModel.addRow(row);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                     }
+                } else {
+                    JOptionPane.showMessageDialog(this, "No classes found in the file: " + file.getName());
                 }
-            } else {
-                JOptionPane.showMessageDialog(this, "No classes found in the file: " + file.getName());
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
