@@ -5,7 +5,6 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,26 +12,26 @@ import java.util.Map;
 import java.util.Set;
 
 public class MetricCalculator {
-    public int calculateLines(File file) throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath());
-        return lines.size();
+
+    public int calculateLines(ClassOrInterfaceDeclaration cls) {
+        return cls.toString().split("\n").length;
     }
 
-    public int calculateLOC(File file) throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath());
+    public int calculateLOC(ClassOrInterfaceDeclaration cls) {
         int loc = 0;
+        String[] lines = cls.toString().split("\n");
         for (String line : lines) {
             line = line.trim();
-            if (!line.isEmpty() && !line.startsWith("//") && !line.startsWith("/*") && !line.startsWith("*") ) {
+            if (!line.isEmpty() && !line.startsWith("//") && !line.startsWith("/*") && !line.startsWith("*")) {
                 loc++;
             }
         }
         return loc;
     }
 
-    public int calculateELOC(File file) throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath());
+    public int calculateELOC(ClassOrInterfaceDeclaration cls) {
         int eLOC = 0;
+        String[] lines = cls.toString().split("\n");
         for (String line : lines) {
             line = line.trim();
             if (!line.isEmpty() && !line.startsWith("//") && !line.startsWith("/*") && !line.startsWith("*") && !line.equals("{") && !line.equals("}")) {
@@ -42,14 +41,14 @@ public class MetricCalculator {
         return eLOC;
     }
 
-    public int calculateILOC(File file) throws IOException {
-        List<String> lines = Files.readAllLines(file.toPath());
+    public int calculateILOC(ClassOrInterfaceDeclaration cls) {
         int iLOC = 0;
+        String[] lines = cls.toString().split("\n");
         for (String line : lines) {
             line = line.trim();
             // Check for non-import statements with semicolons and control structures
             if (!line.startsWith("import") && 
-                (line.endsWith(";") || line.matches("^(for).*"))) {
+                (line.endsWith(";") || line.matches("^(for|while).*"))) {
                 iLOC++;
             }
         }
@@ -61,9 +60,10 @@ public class MetricCalculator {
     }
 
     public double calculateInstability(Map<String, Set<String>> dependencies, String className) {
-        int ce = calculateCe(dependencies, className);
-        int ca = calculateCa(dependencies, className);
-        return (double) ce / (ca + ce);
+        int cout = calculateCe(dependencies, className);
+        int cin = calculateCa(dependencies, className);
+        if (cin + cout == 0) return 0; // To avoid division by zero
+        return (double) cout / (cin + cout);
     }
 
     private int calculateCe(Map<String, Set<String>> dependencies, String className) {

@@ -4,7 +4,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -53,28 +52,25 @@ public class MetricsPanel extends JPanel {
                 List<ClassOrInterfaceDeclaration> classes = parser.parseFile(file);
                 if (classes != null) {
                     for (ClassOrInterfaceDeclaration cls : classes) {
-                        try {
-                            String className = cls.getNameAsString();
-                            int lines = calculator.calculateLines(file);
-                            int loc = calculator.calculateLOC(file);
-                            int eloc = calculator.calculateELOC(file);
-                            int iloc = calculator.calculateILOC(file);
-                            int abstraction = calculator.calculateAbstraction(cls);
-                            double instability = calculator.calculateInstability(dependencies, className);
-                            double distance = calculator.calculateDistance(abstraction, instability);
+                        String className = cls.getNameAsString();
+                        int lines = calculator.calculateLines(cls);
+                        int loc = calculator.calculateLOC(cls);
+                        int eloc = calculator.calculateELOC(cls);
+                        int iloc = calculator.calculateILOC(cls);
+                        int abstraction = calculator.calculateAbstraction(cls);
+                        double instability = calculator.calculateInstability(dependencies, className);
+                        double distance = calculator.calculateDistance(abstraction, instability);
 
-                            Object[] row = {className, lines, loc, eloc, iloc, abstraction, instability, distance};
-                            tableModel.addRow(row);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        Object[] row = {className, lines, loc, eloc, iloc, abstraction, instability, distance};
+                        tableModel.addRow(row);
                     }
                 } else {
                     JOptionPane.showMessageDialog(this, "No classes found in the file: " + file.getName());
                 }
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "An error occurred while calculating metrics.");
         }
     }
 }
