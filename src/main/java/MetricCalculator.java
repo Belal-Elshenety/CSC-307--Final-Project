@@ -8,15 +8,9 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
-import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
-import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
-import com.github.javaparser.symbolsolver.model.resolution.SymbolReference;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -92,89 +86,6 @@ public class MetricCalculator {
         return ca;
     }
 
-//    public Map<String, Set<String>> parseDependencies(List<File> files) throws IOException {
-//        // Setting up the type solver for source files
-//        TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(new File("src/main/java"));
-//
-//        // Setting up the JavaSymbolSolver with only one type solver
-//        JavaSymbolSolver symbolSolver = new JavaSymbolSolver(javaParserTypeSolver);
-//        ParserConfiguration parserConfiguration = new ParserConfiguration().setSymbolResolver(symbolSolver);
-//        JavaParser javaParser = new JavaParser(parserConfiguration);
-//
-//        Map<String, Set<String>> dependencies = new HashMap<>();
-//        Set<String> classNames = new HashSet<>();
-//
-//        // First pass: collect all class names
-//        for (File file : files) {
-//            CompilationUnit compilationUnit = javaParser.parse(file).getResult().get();
-//            List<ClassOrInterfaceDeclaration> classes = compilationUnit.findAll(ClassOrInterfaceDeclaration.class);
-//            for (ClassOrInterfaceDeclaration cls : classes) {
-//                classNames.add(cls.getNameAsString());
-//            }
-//        }
-//
-//        System.out.println("Collected class names: " + classNames);
-//
-//        // Second pass: collect dependencies
-//        for (File file : files) {
-//            CompilationUnit compilationUnit = javaParser.parse(file).getResult().get();
-//            List<ClassOrInterfaceDeclaration> classes = compilationUnit.findAll(ClassOrInterfaceDeclaration.class);
-//            for (ClassOrInterfaceDeclaration cls : classes) {
-//                String className = cls.getNameAsString();
-//                dependencies.putIfAbsent(className, new HashSet<>());
-//                Set<String> deps = dependencies.get(className);
-//
-//                // Handling superclass dependencies
-//                cls.getExtendedTypes().forEach(extendedType -> {
-//                    String parentClass = extendedType.getNameAsString();
-//                    if (classNames.contains(parentClass) && !parentClass.equals(className)) {
-//                        deps.add(parentClass);
-//                        System.out.println("Class " + className + " extends " + parentClass);
-//                    }
-//                });
-//
-//                // Handling field dependencies
-//                cls.getFields().forEach(field -> {
-//                    String varType = field.getElementType().asString();
-//                    if (classNames.contains(varType) && !varType.equals(className)) {
-//                        deps.add(varType);
-//                        System.out.println("Class " + className + " has field of type " + varType);
-//                    }
-//                });
-//
-//                // Analyzing methods and constructors for dependencies
-//                List<CallableDeclaration<?>> methodsAndConstructors = new ArrayList<>();
-//                methodsAndConstructors.addAll(cls.findAll(MethodDeclaration.class));
-//                methodsAndConstructors.addAll(cls.findAll(ConstructorDeclaration.class));
-//
-//                for (CallableDeclaration<?> callable : methodsAndConstructors) {
-//                    callable.findAll(VariableDeclarationExpr.class).forEach(varDecl -> {
-//                        varDecl.getVariables().forEach(variable -> {
-//                            String varType = variable.getType().asString();
-//                            if (classNames.contains(varType) && !varType.equals(className)) {
-//                                deps.add(varType);
-//                                System.out.println("Class " + className + " adds dependency on type " + varType);
-//                            }
-//                        });
-//                    });
-//
-//                    // Analyzing method calls for dependencies
-//                    callable.findAll(MethodCallExpr.class).forEach(call -> {
-//                        call.getScope().ifPresent(scope -> {
-//                            String dependency = scope.toString();
-//                            if (classNames.contains(dependency) && !dependency.equals(className)) {
-//                                deps.add(dependency);
-//                                System.out.println("Class " + className + " adds dependency on method call to " + dependency);
-//                            }
-//                        });
-//                    });
-//                }
-//            }
-//        }
-//
-//        System.out.println("Final dependencies: " + dependencies);
-//        return dependencies;
-//    }
     public Map<String, Set<String>> parseDependencies(List<File> files) throws IOException {
         // Setting up the type solver for source files
         TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(new File("src/main/java"));
@@ -267,7 +178,6 @@ public class MetricCalculator {
         System.out.println("Final dependencies: " + dependencies);
         return dependencies;
     }
-
 
     public double calculateDistance(double abstraction, double instability) {
         return Math.abs(abstraction + instability - 1);
