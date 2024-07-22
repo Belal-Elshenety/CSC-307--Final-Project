@@ -1,15 +1,24 @@
 import com.github.javaparser.JavaParser;
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
+import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
+import com.github.javaparser.symbolsolver.model.resolution.SymbolReference;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class MetricCalculator {
 
@@ -75,33 +84,92 @@ public class MetricCalculator {
         for (Map.Entry<String, Set<String>> entry : dependencies.entrySet()) {
             if (entry.getValue().contains(className)) {
                 ca++;
+                // Logging which class is being checked
+                System.out.println("Class " + entry.getKey() + " depends on " + className);
             }
         }
         return ca;
     }
 
+
+
+
+
     public Map<String, Set<String>> parseDependencies(List<File> files) throws IOException {
+        // Setting up the type solver for source files
+        TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(new File("src/main/java"));
+
+        // Setting up the JavaSymbolSolver with only one type solver
+        JavaSymbolSolver symbolSolver = new JavaSymbolSolver(javaParserTypeSolver);
+        ParserConfiguration parserConfiguration = new ParserConfiguration().setSymbolResolver(symbolSolver);
+        JavaParser javaParser = new JavaParser(parserConfiguration);
+
         Map<String, Set<String>> dependencies = new HashMap<>();
-        JavaParser javaParser = new JavaParser();
+        Set<String> classNames = new HashSet<>();
+
+        // First pass: collect all class names
+        for (File file : files) {
+            CompilationUnit compilationUnit = javaParser.parse(file).getResult().get();
+            List<ClassOrInterfaceDeclaration> classes = compilationUnit.findAll(ClassOrInterfaceDeclaration.class);
+            for (ClassOrInterfaceDeclaration cls : classes) {
+                classNames.add(cls.getNameAsString());
+            }
+        }
+
+        System.out.println("Collected class names: " + classNames);
+
+        // Second pass: collect dependencies
         for (File file : files) {
             CompilationUnit compilationUnit = javaParser.parse(file).getResult().get();
             List<ClassOrInterfaceDeclaration> classes = compilationUnit.findAll(ClassOrInterfaceDeclaration.class);
             for (ClassOrInterfaceDeclaration cls : classes) {
                 String className = cls.getNameAsString();
-                Set<String> deps = new HashSet<>();
-                compilationUnit.findAll(MethodDeclaration.class).forEach(method -> {
-                    method.findAll(com.github.javaparser.ast.expr.MethodCallExpr.class).forEach(call -> {
-                        String dependency = call.getScope().map(Object::toString).orElse("");
-                        if (!dependency.isEmpty() && !dependency.equals(className)) {
-                            deps.add(dependency);
-                        }
-                    });
+                dependencies.putIfAbsent(className, new HashSet<>());
+                Set<String> deps = dependencies.get(className);
+
+                // Handling superclass dependencies
+                cls.getExtendedTypes().forEach(extendedType -> {
+                    String parentClass = extendedType.getNameAsString();
+                    if (classNames.contains(parentClass) && !parentClass.equals(className)) {
+                        deps.add(parentClass);
+                        System.out.println("Class " + className + " extends " + parentClass);
+                    }
                 });
-                dependencies.put(className, deps);
+
+                // Analyzing variable declarations and method calls for dependencies
+                List<CallableDeclaration<?>> methodsAndConstructors = new ArrayList<>();
+                methodsAndConstructors.addAll(cls.findAll(MethodDeclaration.class));
+                methodsAndConstructors.addAll(cls.findAll(ConstructorDeclaration.class));
+
+                for (CallableDeclaration<?> callable : methodsAndConstructors) {
+                    callable.findAll(VariableDeclarationExpr.class).forEach(varDecl -> {
+                        varDecl.getVariables().forEach(variable -> {
+                            String varType = variable.getType().asString();
+                            if (classNames.contains(varType) && !varType.equals(className)) {
+                                deps.add(varType);
+                                System.out.println("Class " + className + " adds dependency on type " + varType);
+                            }
+                        });
+                    });
+
+                    // Analyzing method calls for dependencies
+                    callable.findAll(MethodCallExpr.class).forEach(call -> {
+                        call.getScope().ifPresent(scope -> {
+                            String dependency = scope.toString();
+                            if (classNames.contains(dependency) && !dependency.equals(className)) {
+                                deps.add(dependency);
+                                System.out.println("Class " + className + " adds dependency on method call to " + dependency);
+                            }
+                        });
+                    });
+                }
             }
         }
+
+        System.out.println("Final dependencies: " + dependencies);
         return dependencies;
     }
+
 
     public double calculateDistance(double abstraction, double instability) {
         return Math.abs(abstraction + instability - 1);
