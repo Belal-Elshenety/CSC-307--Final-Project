@@ -38,12 +38,17 @@ public class MetricCalculator {
         String[] lines = cls.toString().split("\n");
         for (String line : lines) {
             line = line.trim();
-            if (!line.isEmpty() && !line.startsWith("//") && !line.startsWith("/*") && !line.startsWith("*") && !line.equals("{") && !line.equals("}")) {
+            if (!line.isEmpty() && !line.startsWith("//") && !line.startsWith("/*") && !line.startsWith("*") && !isDelimiterOnly(line)) {
                 eLOC++;
             }
         }
         return eLOC;
     }
+
+    private boolean isDelimiterOnly(String line) {
+        return line.matches("[{}()\\[\\];,]+");
+    }
+
 
     public int calculateILOC(ClassOrInterfaceDeclaration cls) {
         int iLOC = 0;
