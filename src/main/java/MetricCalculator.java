@@ -38,7 +38,8 @@ public class MetricCalculator {
         String[] lines = cls.toString().split("\n");
         for (String line : lines) {
             line = line.trim();
-            if (!line.isEmpty() && !line.startsWith("//") && !line.startsWith("/*") && !line.startsWith("*") && !isDelimiterOnly(line)) {
+            if (!line.isEmpty() && !line.startsWith("//") && !line.startsWith("/*") && !line.startsWith("*")
+                    && !isDelimiterOnly(line)) {
                 eLOC++;
             }
         }
@@ -48,7 +49,6 @@ public class MetricCalculator {
     private boolean isDelimiterOnly(String line) {
         return line.matches("[{}()\\[\\];,]+");
     }
-
 
     public int calculateILOC(ClassOrInterfaceDeclaration cls) {
         int iLOC = 0;
@@ -68,10 +68,41 @@ public class MetricCalculator {
         return cls.isAbstract() ? 1 : 0;
     }
 
+    public int calculateMaxCC(ClassOrInterfaceDeclaration cls) {
+        int maxCC = 1;
+        List<MethodDeclaration> methods = cls.getMethods();
+        for (MethodDeclaration method : methods) {
+            int CC = calculateFuncCC(method);
+            if (CC > maxCC) {
+                maxCC = CC;
+            }
+        }
+        return maxCC;
+    }
+
+    public int calculateFuncCC(MethodDeclaration func) {
+        int FuncCC = 1;
+
+        IfStmtCounter ifStmtCounter = new IfStmtCounter();
+        ifStmtCounter.visit(func, null);
+        FuncCC += ifStmtCounter.getCount();
+
+        WhileStmtCounter whileStmtCounter = new WhileStmtCounter();
+        whileStmtCounter.visit(func, null);
+        FuncCC += whileStmtCounter.getCount();
+
+        CaseStmtCounter caseStmtCounter = new CaseStmtCounter();
+        caseStmtCounter.visit(func, null);
+        FuncCC += caseStmtCounter.getCount();
+
+        return FuncCC;
+    }
+
     public double calculateInstability(Map<String, Set<String>> dependencies, String className) {
         int cout = calculateCe(dependencies, className);
         int cin = calculateCa(dependencies, className);
-        if (cin + cout == 0) return 0; // To avoid division by zero
+        if (cin + cout == 0)
+            return 0; // To avoid division by zero
         return (double) cout / (cin + cout);
     }
 
@@ -126,7 +157,8 @@ public class MetricCalculator {
         return classNames;
     }
 
-    private void processClassDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames, Map<String, Set<String>> dependencies) {
+    private void processClassDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames,
+            Map<String, Set<String>> dependencies) {
         String className = cls.getNameAsString();
         dependencies.putIfAbsent(className, new HashSet<>());
         Set<String> deps = dependencies.get(className);
@@ -136,7 +168,8 @@ public class MetricCalculator {
         handleMethodAndConstructorDependencies(cls, classNames, className, deps);
     }
 
-    private void handleSuperclassDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames, String className, Set<String> deps) {
+    private void handleSuperclassDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames, String className,
+            Set<String> deps) {
         cls.getExtendedTypes().forEach(extendedType -> {
             String parentClass = extendedType.getNameAsString();
             if (classNames.contains(parentClass) && !parentClass.equals(className)) {
@@ -146,7 +179,8 @@ public class MetricCalculator {
         });
     }
 
-    private void handleFieldDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames, String className, Set<String> deps) {
+    private void handleFieldDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames, String className,
+            Set<String> deps) {
         cls.getFields().forEach(field -> {
             String varType = field.getElementType().asString();
             if (classNames.contains(varType) && !varType.equals(className)) {
@@ -156,7 +190,8 @@ public class MetricCalculator {
         });
     }
 
-    private void handleMethodAndConstructorDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames, String className, Set<String> deps) {
+    private void handleMethodAndConstructorDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames,
+            String className, Set<String> deps) {
         List<CallableDeclaration<?>> methodsAndConstructors = new ArrayList<>();
         methodsAndConstructors.addAll(cls.findAll(MethodDeclaration.class));
         methodsAndConstructors.addAll(cls.findAll(ConstructorDeclaration.class));
@@ -186,7 +221,8 @@ public class MetricCalculator {
         }
     }
 
-    private void handleParameterDependencies(CallableDeclaration<?> callable, Set<String> classNames, String className, Set<String> deps) {
+    private void handleParameterDependencies(CallableDeclaration<?> callable, Set<String> classNames, String className,
+            Set<String> deps) {
         callable.getParameters().forEach(parameter -> {
             String paramType = parameter.getType().asString();
             if (classNames.contains(paramType) && !paramType.equals(className)) {

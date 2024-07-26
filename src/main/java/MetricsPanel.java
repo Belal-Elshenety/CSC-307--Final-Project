@@ -17,7 +17,8 @@ public class MetricsPanel extends JPanel {
         setLayout(new BorderLayout());
 
         // Initialize table model with column names
-        String[] columnNames = {"Class Name", "Lines", "LOC", "eLOC", "iLOC", "Abstraction", "Instability", "Distance"};
+        String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction", "Instability",
+                "Distance" };
         tableModel = new NonEditableTableModel(columnNames, 0);
         table = new JTable(tableModel);
 
@@ -37,9 +38,9 @@ public class MetricsPanel extends JPanel {
     }
 
     private void calculateMetrics(File[] files) {
-        JavaFileParser parser = new JavaFileParser();
+        JavaFileParser parser = JavaFileParser.getInstance();
         MetricCalculator calculator = new MetricCalculator();
-        List<File> fileList = new ArrayList<>();
+        List<File> fileList = new ArrayList<>(); // What is the point of this??
         for (File file : files) {
             fileList.add(file);
         }
@@ -51,16 +52,18 @@ public class MetricsPanel extends JPanel {
                 List<ClassOrInterfaceDeclaration> classes = parser.parseFile(file);
                 if (classes != null) {
                     for (ClassOrInterfaceDeclaration cls : classes) {
+
                         String className = cls.getNameAsString();
                         int lines = calculator.calculateLines(cls);
                         int loc = calculator.calculateLOC(cls);
                         int eloc = calculator.calculateELOC(cls);
                         int iloc = calculator.calculateILOC(cls);
+                        int maxcc = calculator.calculateMaxCC(cls);
                         int abstraction = calculator.calculateAbstraction(cls);
                         double instability = calculator.calculateInstability(dependencies, className);
                         double distance = calculator.calculateDistance(abstraction, instability);
 
-                        Object[] row = {className, lines, loc, eloc, iloc, abstraction, instability, distance};
+                        Object[] row = { className, lines, loc, eloc, iloc, maxcc, abstraction, instability, distance };
                         tableModel.addRow(row);
                     }
                 } else {
