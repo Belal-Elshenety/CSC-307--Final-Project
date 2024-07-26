@@ -1,3 +1,4 @@
+import com.github.javaparser.ast.stmt.ForStmt;
 import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.SwitchEntry;
 import com.github.javaparser.ast.stmt.WhileStmt;
@@ -33,12 +34,27 @@ class WhileStmtCounter extends VoidVisitorAdapter<Void> {
     }
 }
 
-// Visitor class to count IfStmt instances
+// Visitor class to count CaseStmt instances
 class CaseStmtCounter extends VoidVisitorAdapter<Void> {
     private int count = 0;
 
     @Override
     public void visit(SwitchEntry n, Void arg) {
+        super.visit(n, arg);
+        count++;
+    }
+
+    public int getCount() {
+        return count;
+    }
+}
+
+// Visitor class to count ForStmt instances
+class ForStmtCounter extends VoidVisitorAdapter<Void> {
+    private int count = 0;
+
+    @Override
+    public void visit(ForStmt n, Void arg) {
         super.visit(n, arg);
         count++;
     }
