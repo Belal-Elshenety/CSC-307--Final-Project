@@ -107,8 +107,6 @@ public class MetricCalculator {
         int cin = calculateCa(dependencies, className);
         if (cin + cout == 0)
             return 0; // To avoid division by zero
-        if (cin > 0 && cout == 0)
-            return 1; // To account for edge case
         return (double) cout / (cin + cout);
     }
 
