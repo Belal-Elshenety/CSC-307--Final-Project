@@ -95,6 +95,10 @@ public class MetricCalculator {
         caseStmtCounter.visit(func, null);
         FuncCC += caseStmtCounter.getCount();
 
+        ForStmtCounter forStmtCounter = new ForStmtCounter();
+        forStmtCounter.visit(func, null);
+        FuncCC += forStmtCounter.getCount();
+
         return FuncCC;
     }
 
@@ -103,6 +107,8 @@ public class MetricCalculator {
         int cin = calculateCa(dependencies, className);
         if (cin + cout == 0)
             return 0; // To avoid division by zero
+        if (cin > 0 && cout == 0)
+            return 1; // To account for edge case
         return (double) cout / (cin + cout);
     }
 

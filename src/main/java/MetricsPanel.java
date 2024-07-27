@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class MetricsPanel extends JPanel {
+    private MetricsPanel instance;
     private JTable table;
     private NonEditableTableModel tableModel;
     private JButton uploadButton;
@@ -21,8 +22,8 @@ public class MetricsPanel extends JPanel {
                 "Distance" };
         tableModel = new NonEditableTableModel(columnNames, 0);
         table = new JTable(tableModel);
-
         add(new JScrollPane(table), BorderLayout.CENTER);
+        setStrictTable();
 
         uploadButton = new JButton("Upload Java Files");
         uploadButton.addActionListener(e -> {
@@ -37,8 +38,15 @@ public class MetricsPanel extends JPanel {
         add(uploadButton, BorderLayout.NORTH);
     }
 
+    private void setStrictTable() {
+        // Prevent user from shifting table elements
+        table.setRowSelectionAllowed(false);
+        table.setColumnSelectionAllowed(false);
+        table.setCellSelectionEnabled(false);
+        table.setAutoCreateRowSorter(true);
+    }
+
     private void calculateMetrics(File[] files) {
-        JavaFileParser parser = JavaFileParser.getInstance();
         MetricCalculator calculator = new MetricCalculator();
         List<File> fileList = new ArrayList<>(); // What is the point of this??
         for (File file : files) {
@@ -49,7 +57,7 @@ public class MetricsPanel extends JPanel {
             Map<String, Set<String>> dependencies = calculator.parseDependencies(fileList);
 
             for (File file : files) {
-                List<ClassOrInterfaceDeclaration> classes = parser.parseFile(file);
+                List<ClassOrInterfaceDeclaration> classes = JavaFileParser.parseFile(file);
                 if (classes != null) {
                     for (ClassOrInterfaceDeclaration cls : classes) {
 
@@ -74,6 +82,10 @@ public class MetricsPanel extends JPanel {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "An error occurred while calculating metrics.");
         }
+    }
+
+    public JTable getDataTable() {
+        return table;
     }
 }
 

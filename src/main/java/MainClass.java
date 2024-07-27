@@ -1,4 +1,5 @@
 import java.awt.BorderLayout;
+import javax.swing.JPanel;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
@@ -12,13 +13,12 @@ public class MainClass {
 
             JTabbedPane tabbedPane = new JTabbedPane();
 
+            JPanel metricsGraphPanel = new MetricsGraphPanel();
+            tabbedPane.addTab("Graph Visualization", metricsGraphPanel);
+
             // Metrics Panel
             MetricsPanel metricsPanel = new MetricsPanel();
             tabbedPane.addTab("Metrics", metricsPanel);
-
-            // Dependency Graph Panel (Placeholder)
-            DependencyGraphPanel dependencyGraphPanel = new DependencyGraphPanel();
-            tabbedPane.addTab("Dependency Graph", dependencyGraphPanel);
 
             frame.add(tabbedPane, BorderLayout.CENTER);
             frame.setVisible(true);

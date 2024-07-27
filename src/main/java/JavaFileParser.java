@@ -7,24 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-/*
- * Singleton class JavaFileParser used for specific parsing use cases
- */
 public class JavaFileParser {
-    private static JavaFileParser instance;
 
-    private JavaFileParser() {
-        super();
-    }
-
-    public static JavaFileParser getInstance() {
-        if (instance == null) {
-            instance = new JavaFileParser();
-        }
-        return instance;
-    }
-
-    public List<ClassOrInterfaceDeclaration> parseFile(File file) {
+    public static List<ClassOrInterfaceDeclaration> parseFile(File file) {
         try {
             JavaParser javaParser = new JavaParser();
             ParseResult<CompilationUnit> parseResult = javaParser.parse(file);
