@@ -1,21 +1,45 @@
-import com.github.javaparser.JavaParser;
-import com.github.javaparser.ParserConfiguration;
-import com.github.javaparser.ast.CompilationUnit;
-import com.github.javaparser.ast.body.CallableDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-import com.github.javaparser.ast.body.ConstructorDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.expr.ObjectCreationExpr;
-import com.github.javaparser.symbolsolver.JavaSymbolSolver;
-import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
-import com.github.javaparser.symbolsolver.resolution.typesolvers.JavaParserTypeSolver;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
-public class MetricCalculator {
+import javax.swing.table.DefaultTableModel;
+
+public class MetricCalculator extends DefaultTableModel {
+    private static MetricCalculator instance;
+    private static String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction",
+            "Instability",
+            "Distance" };
+    private static int rowCount = 0;
+
+    private MetricCalculator(Object[] columnNames, int rowCount) {
+        super(columnNames, rowCount);
+    }
+
+    public static MetricCalculator getInstance() {
+        if (instance == null) {
+            instance = new MetricCalculator(columnNames, rowCount);
+        }
+        return instance;
+    }
+
+    public void calculateClassMetrics(List<ClassOrInterfaceDeclaration> classes,
+            Map<String, Set<String>> dependencies) {
+        for (ClassOrInterfaceDeclaration cls : classes) {
+
+            String className = cls.getNameAsString();
+            int lines = calculateLines(cls);
+            int loc = calculateLOC(cls);
+            int eloc = calculateELOC(cls);
+            int iloc = calculateILOC(cls);
+            int maxcc = calculateMaxCC(cls);
+            int abstraction = calculateAbstraction(cls);
+            double instability = calculateInstability(dependencies, className);
+            double distance = calculateDistance(abstraction, instability);
+
+            Object[] row = { className, lines, loc, eloc, iloc, maxcc, abstraction, instability, distance };
+            instance.addRow(row);
+        }
+    }
 
     public int calculateLines(ClassOrInterfaceDeclaration cls) {
         return cls.toString().split("\n").length;
@@ -107,8 +131,6 @@ public class MetricCalculator {
         int cin = calculateCa(dependencies, className);
         if (cin + cout == 0)
             return 0; // To avoid division by zero
-        if (cin > 0 && cout == 0)
-            return 1; // To account for edge case
         return (double) cout / (cin + cout);
     }
 
@@ -128,117 +150,12 @@ public class MetricCalculator {
         return ca;
     }
 
-    public Map<String, Set<String>> parseDependencies(List<File> files) throws IOException {
-        TypeSolver javaParserTypeSolver = new JavaParserTypeSolver(new File("src/main/java"));
-
-        JavaSymbolSolver symbolSolver = new JavaSymbolSolver(javaParserTypeSolver);
-        ParserConfiguration parserConfiguration = new ParserConfiguration().setSymbolResolver(symbolSolver);
-        JavaParser javaParser = new JavaParser(parserConfiguration);
-
-        Set<String> classNames = collectClassNames(files, javaParser);
-        System.out.println("Collected class names: " + classNames);
-
-        Map<String, Set<String>> dependencies = new HashMap<>();
-        for (File file : files) {
-            CompilationUnit compilationUnit = javaParser.parse(file).getResult().get();
-            List<ClassOrInterfaceDeclaration> classes = compilationUnit.findAll(ClassOrInterfaceDeclaration.class);
-            for (ClassOrInterfaceDeclaration cls : classes) {
-                processClassDependencies(cls, classNames, dependencies);
-            }
-        }
-
-        System.out.println("Final dependencies: " + dependencies);
-        return dependencies;
-    }
-
-    private Set<String> collectClassNames(List<File> files, JavaParser javaParser) throws IOException {
-        Set<String> classNames = new HashSet<>();
-        for (File file : files) {
-            CompilationUnit compilationUnit = javaParser.parse(file).getResult().get();
-            List<ClassOrInterfaceDeclaration> classes = compilationUnit.findAll(ClassOrInterfaceDeclaration.class);
-            for (ClassOrInterfaceDeclaration cls : classes) {
-                classNames.add(cls.getNameAsString());
-            }
-        }
-        return classNames;
-    }
-
-    private void processClassDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames,
-            Map<String, Set<String>> dependencies) {
-        String className = cls.getNameAsString();
-        dependencies.putIfAbsent(className, new HashSet<>());
-        Set<String> deps = dependencies.get(className);
-
-        handleSuperclassDependencies(cls, classNames, className, deps);
-        handleFieldDependencies(cls, classNames, className, deps);
-        handleMethodAndConstructorDependencies(cls, classNames, className, deps);
-    }
-
-    private void handleSuperclassDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames, String className,
-            Set<String> deps) {
-        cls.getExtendedTypes().forEach(extendedType -> {
-            String parentClass = extendedType.getNameAsString();
-            if (classNames.contains(parentClass) && !parentClass.equals(className)) {
-                deps.add(parentClass);
-                System.out.println("Class " + className + " extends " + parentClass);
-            }
-        });
-    }
-
-    private void handleFieldDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames, String className,
-            Set<String> deps) {
-        cls.getFields().forEach(field -> {
-            String varType = field.getElementType().asString();
-            if (classNames.contains(varType) && !varType.equals(className)) {
-                deps.add(varType);
-                System.out.println("Class " + className + " has field of type " + varType);
-            }
-        });
-    }
-
-    private void handleMethodAndConstructorDependencies(ClassOrInterfaceDeclaration cls, Set<String> classNames,
-            String className, Set<String> deps) {
-        List<CallableDeclaration<?>> methodsAndConstructors = new ArrayList<>();
-        methodsAndConstructors.addAll(cls.findAll(MethodDeclaration.class));
-        methodsAndConstructors.addAll(cls.findAll(ConstructorDeclaration.class));
-
-        for (CallableDeclaration<?> callable : methodsAndConstructors) {
-            handleParameterDependencies(callable, classNames, className, deps);
-
-            // Analyzing method calls for dependencies
-            callable.findAll(MethodCallExpr.class).forEach(call -> {
-                call.getScope().ifPresent(scope -> {
-                    String dependency = scope.toString();
-                    if (classNames.contains(dependency) && !dependency.equals(className)) {
-                        deps.add(dependency);
-                        System.out.println("Class " + className + " adds dependency on method call to " + dependency);
-                    }
-                });
-            });
-
-            // Analyzing object creation for dependencies
-            callable.findAll(ObjectCreationExpr.class).forEach(creation -> {
-                String createdType = creation.getType().asString();
-                if (classNames.contains(createdType) && !createdType.equals(className)) {
-                    deps.add(createdType);
-                    System.out.println("Class " + className + " creates object of type " + createdType);
-                }
-            });
-        }
-    }
-
-    private void handleParameterDependencies(CallableDeclaration<?> callable, Set<String> classNames, String className,
-            Set<String> deps) {
-        callable.getParameters().forEach(parameter -> {
-            String paramType = parameter.getType().asString();
-            if (classNames.contains(paramType) && !paramType.equals(className)) {
-                deps.add(paramType);
-                System.out.println("Class " + className + " has parameter of type " + paramType);
-            }
-        });
-    }
-
     public double calculateDistance(double abstraction, double instability) {
         return Math.abs(abstraction + instability - 1);
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int column) {
+        return false;
     }
 }

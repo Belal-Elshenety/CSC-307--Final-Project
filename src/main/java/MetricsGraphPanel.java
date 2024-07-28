@@ -13,7 +13,7 @@ import javax.swing.SwingConstants;
 
 public class MetricsGraphPanel extends JPanel {
     int marg = 50;
-    JTable table;
+    JTable table ;
     double test_data_A[] = { 0, 0, 1, 0 };
     double test_data_I[] = { 1, 0.5, 0.134, 0 };
 
