@@ -30,7 +30,6 @@ public abstract class DependencyHandler {
         JavaParser javaParser = new JavaParser(parserConfiguration);
 
         Set<String> classNames = collectClassNames(files, javaParser);
-        System.out.println("Collected class names: " + classNames);
 
         Map<String, Set<String>> dependencies = new HashMap<>();
         for (File file : files) {
@@ -40,8 +39,6 @@ public abstract class DependencyHandler {
                 processClassDependencies(cls, classNames, dependencies);
             }
         }
-
-        System.out.println("Final dependencies: " + dependencies);
         return dependencies;
     }
 
@@ -75,7 +72,6 @@ public abstract class DependencyHandler {
             String parentClass = extendedType.getNameAsString();
             if (classNames.contains(parentClass) && !parentClass.equals(className)) {
                 deps.add(parentClass);
-                System.out.println("Class " + className + " extends " + parentClass);
             }
         });
     }
@@ -87,7 +83,6 @@ public abstract class DependencyHandler {
             String varType = field.getElementType().asString();
             if (classNames.contains(varType) && !varType.equals(className)) {
                 deps.add(varType);
-                System.out.println("Class " + className + " has field of type " + varType);
             }
         });
     }
@@ -107,7 +102,6 @@ public abstract class DependencyHandler {
                     String dependency = scope.toString();
                     if (classNames.contains(dependency) && !dependency.equals(className)) {
                         deps.add(dependency);
-                        System.out.println("Class " + className + " adds dependency on method call to " + dependency);
                     }
                 });
             });
@@ -117,7 +111,6 @@ public abstract class DependencyHandler {
                 String createdType = creation.getType().asString();
                 if (classNames.contains(createdType) && !createdType.equals(className)) {
                     deps.add(createdType);
-                    System.out.println("Class " + className + " creates object of type " + createdType);
                 }
             });
         }
@@ -130,7 +123,6 @@ public abstract class DependencyHandler {
             String paramType = parameter.getType().asString();
             if (classNames.contains(paramType) && !paramType.equals(className)) {
                 deps.add(paramType);
-                System.out.println("Class " + className + " has parameter of type " + paramType);
             }
         });
     }

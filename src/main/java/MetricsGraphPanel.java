@@ -5,17 +5,16 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JTable;
 import javax.swing.SwingConstants;
 
-public class MetricsGraphPanel extends JPanel {
+public class MetricsGraphPanel extends JPanel implements PropertyChangeListener {
     int marg = 50;
-    JTable table ;
-    double test_data_A[] = { 0, 0, 1, 0 };
-    double test_data_I[] = { 1, 0.5, 0.134, 0 };
+    NonEditableTableModel dataTable;
 
     public MetricsGraphPanel() {
         setBackground(Color.WHITE);
@@ -54,12 +53,16 @@ public class MetricsGraphPanel extends JPanel {
         graph.drawString("0.0", marg - 25, height - marg + 15);
         graph.drawString("1.0", marg - 25, marg + 10);
 
+        if (dataTable == null) {
+            return;
+        }
         // Draw Points
         int i;
         graph.setPaint(Color.RED);
-        for (i = 0; i < test_data_A.length; i++) {
-            double A = test_data_A[i];
-            double I = test_data_I[i];
+        System.out.println("Drawing Points");
+        for (i = 0; i < dataTable.getRowCount(); i++) {
+            double A = (double) dataTable.getValueAt(i, 6);
+            double I = (double) dataTable.getValueAt(i, 7);
             graph.fill(new Ellipse2D.Double(scalePointI(I), scalePointA(A), 10, 10));
         }
 
@@ -72,5 +75,11 @@ public class MetricsGraphPanel extends JPanel {
 
     private double scalePointI(double num) {
         return (num * (getWidth() - (marg * 2) - 10)) + marg;
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        dataTable = (NonEditableTableModel) evt.getNewValue();
+        repaint();
     }
 }

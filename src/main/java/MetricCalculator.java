@@ -1,6 +1,7 @@
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 
+import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.*;
 
@@ -25,6 +26,12 @@ public class MetricCalculator extends PropertyChangeSupport {
         return instance;
     }
 
+    public void addObserver(PropertyChangeListener p) {
+        if (instance != null) {
+            instance.addPropertyChangeListener(p);
+        }
+    }
+
     public NonEditableTableModel getDataTable() {
         return dataTable;
     }
@@ -39,20 +46,22 @@ public class MetricCalculator extends PropertyChangeSupport {
             int eloc = calculateELOC(cls);
             int iloc = calculateILOC(cls);
             int maxcc = calculateMaxCC(cls);
-            int abstraction = calculateAbstraction(cls);
+            double abstraction = calculateAbstraction(cls);
             double instability = calculateInstability(dependencies, className);
             double distance = calculateDistance(abstraction, instability);
 
             Object[] row = { className, lines, loc, eloc, iloc, maxcc, abstraction, instability, distance };
             dataTable.addRow(row);
         }
+        firePropertyChange("dataTable", null, dataTable);
+        System.out.println("Firing");
     }
 
-    public int calculateLines(ClassOrInterfaceDeclaration cls) {
+    private int calculateLines(ClassOrInterfaceDeclaration cls) {
         return cls.toString().split("\n").length;
     }
 
-    public int calculateLOC(ClassOrInterfaceDeclaration cls) {
+    private int calculateLOC(ClassOrInterfaceDeclaration cls) {
         int loc = 0;
         String[] lines = cls.toString().split("\n");
         for (String line : lines) {
@@ -64,7 +73,7 @@ public class MetricCalculator extends PropertyChangeSupport {
         return loc;
     }
 
-    public int calculateELOC(ClassOrInterfaceDeclaration cls) {
+    private int calculateELOC(ClassOrInterfaceDeclaration cls) {
         int eLOC = 0;
         String[] lines = cls.toString().split("\n");
         for (String line : lines) {
@@ -150,8 +159,8 @@ public class MetricCalculator extends PropertyChangeSupport {
         for (Map.Entry<String, Set<String>> entry : dependencies.entrySet()) {
             if (entry.getValue().contains(className)) {
                 ca++;
-                // Logging which class is being checked
-                System.out.println("Class " + entry.getKey() + " depends on " + className);
+                // // Logging which class is being checked
+                // System.out.println("Class " + entry.getKey() + " depends on " + className);
             }
         }
         return ca;
