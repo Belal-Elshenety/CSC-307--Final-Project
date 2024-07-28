@@ -13,8 +13,9 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 
 public class MetricsGraphPanel extends JPanel implements PropertyChangeListener {
-    int marg = 50;
-    NonEditableTableModel dataTable;
+    private int marg = 50;
+    private NonEditableTableModel dataTable;
+    private boolean complexityGradient = true;
 
     public MetricsGraphPanel() {
         setBackground(Color.WHITE);
@@ -58,14 +59,29 @@ public class MetricsGraphPanel extends JPanel implements PropertyChangeListener 
         }
         // Draw Points
         int i;
-        graph.setPaint(Color.RED);
+        graph.setPaint(Color.BLACK);
         System.out.println("Drawing Points");
         for (i = 0; i < dataTable.getRowCount(); i++) {
+            if (complexityGradient) {
+                graph.setPaint(getComplexityColor((int) dataTable.getValueAt(i, 5)));
+            }
             double A = (double) dataTable.getValueAt(i, 6);
             double I = (double) dataTable.getValueAt(i, 7);
             graph.fill(new Ellipse2D.Double(scalePointI(I), scalePointA(A), 10, 10));
         }
 
+    }
+
+    private Color getComplexityColor(int cc) {
+        if (cc <= 10) {
+            return Color.GREEN;
+        } else if (cc <= 20) {
+            return Color.YELLOW;
+        } else if (cc <= 40) {
+            return Color.RED;
+        } else {
+            return Color.BLACK;
+        }
     }
 
     private double scalePointA(double num) {
