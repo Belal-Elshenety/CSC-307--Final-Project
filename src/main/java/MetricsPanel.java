@@ -44,7 +44,7 @@ public class MetricsPanel extends JPanel {
     }
 
     private void calculateMetrics(File[] files) {
-        List<File> fileList = new ArrayList<>(); // What is the point of this??
+        List<File> fileList = new ArrayList<>();
         for (File file : files) {
             fileList.add(file);
         }
@@ -64,9 +64,5 @@ public class MetricsPanel extends JPanel {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this, "An error occurred while calculating metrics.");
         }
-    }
-
-    public JTable getDataTable() {
-        return table;
     }
 }
