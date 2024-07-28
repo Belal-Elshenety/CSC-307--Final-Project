@@ -1,6 +1,5 @@
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
@@ -9,19 +8,12 @@ import java.util.Map;
 import java.util.Set;
 
 public class MetricsPanel extends JPanel {
-    private MetricsPanel instance;
     private JTable table;
-    private NonEditableTableModel tableModel;
     private JButton uploadButton;
 
     public MetricsPanel() {
         setLayout(new BorderLayout());
-
-        // Initialize table model with column names
-        String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction", "Instability",
-                "Distance" };
-        tableModel = new NonEditableTableModel(columnNames, 0);
-        table = new JTable(tableModel);
+        table = new JTable(MetricCalculator.getInstance().getDataTable());
         add(new JScrollPane(table), BorderLayout.CENTER);
         setStrictTable();
 
@@ -47,33 +39,18 @@ public class MetricsPanel extends JPanel {
     }
 
     private void calculateMetrics(File[] files) {
-        MetricCalculator calculator = new MetricCalculator();
         List<File> fileList = new ArrayList<>(); // What is the point of this??
         for (File file : files) {
             fileList.add(file);
         }
 
         try {
-            Map<String, Set<String>> dependencies = calculator.parseDependencies(fileList);
+            Map<String, Set<String>> dependencies = DependencyHandler.parseDependencies(fileList);
 
             for (File file : files) {
                 List<ClassOrInterfaceDeclaration> classes = JavaFileParser.parseFile(file);
                 if (classes != null) {
-                    for (ClassOrInterfaceDeclaration cls : classes) {
-
-                        String className = cls.getNameAsString();
-                        int lines = calculator.calculateLines(cls);
-                        int loc = calculator.calculateLOC(cls);
-                        int eloc = calculator.calculateELOC(cls);
-                        int iloc = calculator.calculateILOC(cls);
-                        int maxcc = calculator.calculateMaxCC(cls);
-                        int abstraction = calculator.calculateAbstraction(cls);
-                        double instability = calculator.calculateInstability(dependencies, className);
-                        double distance = calculator.calculateDistance(abstraction, instability);
-
-                        Object[] row = { className, lines, loc, eloc, iloc, maxcc, abstraction, instability, distance };
-                        tableModel.addRow(row);
-                    }
+                    MetricCalculator.getInstance().calculateClassMetrics(classes, dependencies);
                 } else {
                     JOptionPane.showMessageDialog(this, "No classes found in the file: " + file.getName());
                 }
@@ -86,16 +63,5 @@ public class MetricsPanel extends JPanel {
 
     public JTable getDataTable() {
         return table;
-    }
-}
-
-class NonEditableTableModel extends DefaultTableModel {
-    public NonEditableTableModel(Object[] columnNames, int rowCount) {
-        super(columnNames, rowCount);
-    }
-
-    @Override
-    public boolean isCellEditable(int row, int column) {
-        return false;
     }
 }
