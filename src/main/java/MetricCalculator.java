@@ -1,25 +1,32 @@
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+
+import java.beans.PropertyChangeSupport;
 import java.util.*;
 
 import javax.swing.table.DefaultTableModel;
 
-public class MetricCalculator extends DefaultTableModel {
+public class MetricCalculator extends PropertyChangeSupport {
     private static MetricCalculator instance;
     private static String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction",
             "Instability",
             "Distance" };
     private static int rowCount = 0;
+    private NonEditableTableModel dataTable = new NonEditableTableModel(columnNames, rowCount);
 
-    private MetricCalculator(Object[] columnNames, int rowCount) {
-        super(columnNames, rowCount);
+    private MetricCalculator() {
+        super(new Object());
     }
 
     public static MetricCalculator getInstance() {
         if (instance == null) {
-            instance = new MetricCalculator(columnNames, rowCount);
+            instance = new MetricCalculator();
         }
         return instance;
+    }
+
+    public NonEditableTableModel getDataTable() {
+        return dataTable;
     }
 
     public void calculateClassMetrics(List<ClassOrInterfaceDeclaration> classes,
@@ -37,7 +44,7 @@ public class MetricCalculator extends DefaultTableModel {
             double distance = calculateDistance(abstraction, instability);
 
             Object[] row = { className, lines, loc, eloc, iloc, maxcc, abstraction, instability, distance };
-            instance.addRow(row);
+            dataTable.addRow(row);
         }
     }
 
@@ -152,6 +159,12 @@ public class MetricCalculator extends DefaultTableModel {
 
     public double calculateDistance(double abstraction, double instability) {
         return Math.abs(abstraction + instability - 1);
+    }
+}
+
+class NonEditableTableModel extends DefaultTableModel {
+    public NonEditableTableModel(Object[] columnNames, int rowCount) {
+        super(columnNames, rowCount);
     }
 
     @Override

@@ -13,7 +13,7 @@ public class MetricsPanel extends JPanel {
 
     public MetricsPanel() {
         setLayout(new BorderLayout());
-        table = new JTable(MetricCalculator.getInstance());
+        table = new JTable(MetricCalculator.getInstance().getDataTable());
         add(new JScrollPane(table), BorderLayout.CENTER);
         setStrictTable();
 

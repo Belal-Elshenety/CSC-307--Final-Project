@@ -7,7 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
-public class JavaFileParser {
+public abstract class JavaFileParser {
 
     public static List<ClassOrInterfaceDeclaration> parseFile(File file) {
         try {
