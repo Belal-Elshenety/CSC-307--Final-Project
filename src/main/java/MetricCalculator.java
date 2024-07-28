@@ -12,8 +12,7 @@ public class MetricCalculator extends PropertyChangeSupport {
     private static String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction",
             "Instability",
             "Distance" };
-    private static int rowCount = 0;
-    private NonEditableTableModel dataTable = new NonEditableTableModel(columnNames, rowCount);
+    private NonEditableTableModel dataTable = new NonEditableTableModel(columnNames, 0);
 
     private MetricCalculator() {
         super(new Object());
@@ -36,6 +35,11 @@ public class MetricCalculator extends PropertyChangeSupport {
         return dataTable;
     }
 
+    public void clearTable() {
+        dataTable.setRowCount(0);
+        firePropertyChange("dataTable", null, dataTable);
+    }
+
     public void calculateClassMetrics(List<ClassOrInterfaceDeclaration> classes,
             Map<String, Set<String>> dependencies) {
         for (ClassOrInterfaceDeclaration cls : classes) {
@@ -54,7 +58,6 @@ public class MetricCalculator extends PropertyChangeSupport {
             dataTable.addRow(row);
         }
         firePropertyChange("dataTable", null, dataTable);
-        System.out.println("Firing");
     }
 
     private int calculateLines(ClassOrInterfaceDeclaration cls) {
@@ -173,7 +176,7 @@ public class MetricCalculator extends PropertyChangeSupport {
 
 class NonEditableTableModel extends DefaultTableModel {
     public NonEditableTableModel(Object[] columnNames, int rowCount) {
-        super(columnNames, rowCount);
+        super(columnNames, 0);
     }
 
     @Override

@@ -10,6 +10,7 @@ import java.util.Set;
 public class MetricsPanel extends JPanel {
     private JTable table;
     private JButton uploadButton;
+    private JButton clearButton;
 
     public MetricsPanel() {
         setLayout(new BorderLayout());
@@ -28,6 +29,12 @@ public class MetricsPanel extends JPanel {
             }
         });
         add(uploadButton, BorderLayout.NORTH);
+
+        clearButton = new JButton("Clear Java Files");
+        clearButton.addActionListener(l -> {
+            MetricCalculator.getInstance().clearTable();
+        });
+        add(clearButton, BorderLayout.SOUTH);
     }
 
     private void setStrictTable() {

@@ -21,6 +21,10 @@ public class MainClass {
             tabbedPane.addTab("Graph Visualization", metricsGraphPanel);
             MetricCalculator.getInstance().addObserver(metricsGraphPanel);
 
+            // Settings Panel
+            SettingsPanel settingsPanel = new SettingsPanel(metricsGraphPanel);
+            tabbedPane.addTab("Settings", settingsPanel);
+
             frame.add(tabbedPane, BorderLayout.CENTER);
             frame.setVisible(true);
         });
