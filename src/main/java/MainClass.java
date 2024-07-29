@@ -6,7 +6,7 @@ import javax.swing.SwingUtilities;
 public class MainClass {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("Java Metrics and Dependency Graphs");
+            JFrame frame = new JFrame("Java Metrics and Graph Visualization");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setSize(800, 600);
 
