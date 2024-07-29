@@ -2,7 +2,6 @@ import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
-
 import java.io.File;
 import java.io.IOException;
 import java.util.List;

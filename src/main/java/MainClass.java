@@ -12,11 +12,9 @@ public class MainClass {
 
             JTabbedPane tabbedPane = new JTabbedPane();
 
-            // Metrics Panel
             MetricsPanel metricsPanel = new MetricsPanel();
             tabbedPane.addTab("Metrics", metricsPanel);
 
-            // Graphics Panel
             MetricsGraphPanel metricsGraphPanel = new MetricsGraphPanel();
             tabbedPane.addTab("Graph Visualization", metricsGraphPanel);
             MetricCalculator.getInstance().addObserver(metricsGraphPanel);

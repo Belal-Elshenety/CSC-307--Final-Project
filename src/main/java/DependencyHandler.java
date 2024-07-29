@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.ast.CompilationUnit;
@@ -96,7 +95,6 @@ public abstract class DependencyHandler {
         for (CallableDeclaration<?> callable : methodsAndConstructors) {
             handleParameterDependencies(callable, classNames, className, deps);
 
-            // Analyzing method calls for dependencies
             callable.findAll(MethodCallExpr.class).forEach(call -> {
                 call.getScope().ifPresent(scope -> {
                     String dependency = scope.toString();
@@ -106,7 +104,6 @@ public abstract class DependencyHandler {
                 });
             });
 
-            // Analyzing object creation for dependencies
             callable.findAll(ObjectCreationExpr.class).forEach(creation -> {
                 String createdType = creation.getType().asString();
                 if (classNames.contains(createdType) && !createdType.equals(className)) {

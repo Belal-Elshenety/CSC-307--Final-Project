@@ -10,7 +10,6 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -25,13 +24,11 @@ public class MetricsGraphPanel extends JPanel implements PropertyChangeListener 
         setBackground(Color.WHITE);
         setLayout(new BorderLayout());
 
-        // X-Axis Label
         JLabel xlabel = new JLabel("Instability");
         xlabel.setHorizontalAlignment(SwingConstants.RIGHT);
         xlabel.setVerticalAlignment(SwingConstants.CENTER);
         add(xlabel, BorderLayout.PAGE_END);
 
-        // Y-Axis Label
         JLabel ylabel = new JLabel("Abstractness");
         ylabel.setHorizontalAlignment(SwingConstants.LEFT);
         ylabel.setVerticalAlignment(SwingConstants.TOP);
@@ -48,7 +45,6 @@ public class MetricsGraphPanel extends JPanel implements PropertyChangeListener 
 
         graph.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Draw X-Axis and Y-Axis
         graph.draw(new Line2D.Double(MARGIN, MARGIN, MARGIN, height - MARGIN));
         graph.draw(new Line2D.Double(MARGIN, height - MARGIN, width - MARGIN, height - MARGIN));
 
@@ -60,7 +56,6 @@ public class MetricsGraphPanel extends JPanel implements PropertyChangeListener 
             return;
         }
 
-        // Draw Points
         for (Point p : points) {
             p.paintComponent(graph);
         }
@@ -74,10 +69,8 @@ public class MetricsGraphPanel extends JPanel implements PropertyChangeListener 
             return;
         }
 
-        // Clear existing points
         removeAllPoints();
 
-        // Add new points
         for (int i = 0; i < dataTable.getRowCount(); i++) {
             String name = (String) dataTable.getValueAt(i, 0);
             int eLoc = (int) dataTable.getValueAt(i, 3);

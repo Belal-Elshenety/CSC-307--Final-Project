@@ -9,10 +9,10 @@ import javax.swing.table.DefaultTableModel;
 
 public class MetricCalculator extends PropertyChangeSupport {
     private static MetricCalculator instance;
-    private static String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction",
+    private static final String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction",
             "Instability",
             "Distance" };
-    private NonEditableTableModel dataTable = new NonEditableTableModel(columnNames, 0);
+    private final NonEditableTableModel dataTable = new NonEditableTableModel(columnNames);
 
     private MetricCalculator() {
         super(new Object());
@@ -98,7 +98,6 @@ public class MetricCalculator extends PropertyChangeSupport {
         String[] lines = cls.toString().split("\n");
         for (String line : lines) {
             line = line.trim();
-            // Check for non-import statements with semicolons and control structures
             if (!line.startsWith("import") &&
                     (line.endsWith(";") || line.matches("^(for|while).*"))) {
                 iLOC++;
@@ -162,8 +161,6 @@ public class MetricCalculator extends PropertyChangeSupport {
         for (Map.Entry<String, Set<String>> entry : dependencies.entrySet()) {
             if (entry.getValue().contains(className)) {
                 ca++;
-                // // Logging which class is being checked
-                // System.out.println("Class " + entry.getKey() + " depends on " + className);
             }
         }
         return ca;
@@ -175,7 +172,7 @@ public class MetricCalculator extends PropertyChangeSupport {
 }
 
 class NonEditableTableModel extends DefaultTableModel {
-    public NonEditableTableModel(Object[] columnNames, int rowCount) {
+    public NonEditableTableModel(Object[] columnNames) {
         super(columnNames, 0);
     }
 
