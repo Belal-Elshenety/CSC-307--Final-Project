@@ -9,10 +9,10 @@ import javax.swing.table.DefaultTableModel;
 
 public class MetricCalculator extends PropertyChangeSupport {
     private static MetricCalculator instance;
-    private static String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction",
+    private static final String[] columnNames = { "Class Name", "Lines", "LOC", "eLOC", "iLOC", "MaxCC", "Abstraction",
             "Instability",
             "Distance" };
-    private NonEditableTableModel dataTable = new NonEditableTableModel(columnNames);
+    private final NonEditableTableModel dataTable = new NonEditableTableModel(columnNames);
 
     private MetricCalculator() {
         super(new Object());
