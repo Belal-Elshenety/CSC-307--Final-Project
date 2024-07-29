@@ -21,9 +21,6 @@ public class MainClass {
             tabbedPane.addTab("Graph Visualization", metricsGraphPanel);
             MetricCalculator.getInstance().addObserver(metricsGraphPanel);
 
-            MouseNanny nanny = new MouseNanny();
-            metricsGraphPanel.addMouseListener(nanny);
-
             frame.add(tabbedPane, BorderLayout.CENTER);
             frame.setVisible(true);
         });
